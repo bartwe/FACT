@@ -8,3 +8,7 @@ Debug/
 Release/
 *.csproj.user
 *.vcxproj.user
+
+/visualc/FAudio.opensdf
+/visualc/FAudio.sdf
+/visualc/FAudio.v12.suo
