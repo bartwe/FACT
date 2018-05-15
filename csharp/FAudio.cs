@@ -1916,7 +1916,7 @@ public static class FAudio
 		byte[] F3DInstance, // F3DAUDIO_HANDLE
 		ref F3DAUDIO_LISTENER pListener,
 		ref F3DAUDIO_EMITTER pEmitter,
-		out F3DAUDIO_DSP_SETTINGS pDSPSettings
+		ref F3DAUDIO_DSP_SETTINGS pDSPSettings
 	);
 
 	[DllImport(nativeLibName, CallingConvention = CallingConvention.Cdecl)]
