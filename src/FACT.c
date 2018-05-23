@@ -791,7 +791,6 @@ uint32_t FACTSoundBank_Play(
 		timeOffset,
 		&result
 	);
-	FACTCue_Play(result);
 	if (ppCue != NULL)
 	{
 		*ppCue = result;
@@ -801,6 +800,7 @@ uint32_t FACTSoundBank_Play(
 		/* AKA we get to Destroy() this ourselves */
 		result->managed = 1;
 	}
+	FACTCue_Play(result);
 	return 0;
 }
 
@@ -820,8 +820,6 @@ uint32_t FACTSoundBank_Play3D(
 		timeOffset,
 		&result
 	);
-	FACT3DApply(pDSPSettings, result);
-	FACTCue_Play(result);
 	if (ppCue != NULL)
 	{
 		*ppCue = result;
@@ -831,6 +829,8 @@ uint32_t FACTSoundBank_Play3D(
 		/* AKA we get to Destroy() this ourselves */
 		result->managed = 1;
 	}
+	FACT3DApply(pDSPSettings, result);
+	FACTCue_Play(result);
 	return 0;
 }
 
@@ -1298,6 +1298,7 @@ uint32_t FACTWave_Destroy(FACTWave *pWave)
 
 	LinkedList_RemoveEntry(&pWave->parentBank->waveList, pWave);
 
+	FAudioVoice_DestroyVoice(pWave->voice);
 	if (pWave->notifyOnDestroy)
 	{
 		note.type = FACTNOTIFICATIONTYPE_WAVEDESTROYED;
@@ -1505,7 +1506,12 @@ uint32_t FACTCue_Play(FACTCue *pCue)
 		tmp = pCue->parentBank->cueList; \
 		if (obj->maxInstanceBehavior == 0) /* Fail */ \
 		{ \
-			/* FIXME: May need to delete stuff from SelectSound */ \
+			pCue->state |= FACT_STATE_STOPPED; \
+			pCue->state &= ~( \
+				FACT_STATE_PLAYING | \
+				FACT_STATE_STOPPING | \
+				FACT_STATE_PAUSED \
+			); \
 			FAudio_PlatformUnlockAudio(pCue->parentBank->parentEngine->audio); \
 			return 1; \
 		} \
@@ -1633,8 +1639,6 @@ uint32_t FACTCue_Play(FACTCue *pCue)
 
 uint32_t FACTCue_Stop(FACTCue *pCue, uint32_t dwFlags)
 {
-	uint8_t i;
-
 	if (pCue->state & FACT_STATE_STOPPED)
 	{
 		return 0;
@@ -1665,27 +1669,7 @@ uint32_t FACTCue_Stop(FACTCue *pCue, uint32_t dwFlags)
 		}
 		else if (pCue->active & 0x02)
 		{
-			for (i = 0; i < pCue->playing.sound.sound->trackCount; i += 1)
-			{
-				if (pCue->playing.sound.tracks[i].activeWave.wave != NULL)
-				{
-					FACTWave_Destroy(
-						pCue->playing.sound.tracks[i].activeWave.wave
-					);
-				}
-				if (pCue->playing.sound.tracks[i].upcomingWave.wave != NULL)
-				{
-					FACTWave_Destroy(
-						pCue->playing.sound.tracks[i].upcomingWave.wave
-					);
-				}
-				FAudio_free(pCue->playing.sound.tracks[i].events);
-			}
-			FAudio_free(pCue->playing.sound.tracks);
-
-			pCue->parentBank->parentEngine->categories[
-				pCue->playing.sound.sound->category
-			].instanceCount -= 1;
+			FACT_INTERNAL_DestroySound(pCue);
 		}
 		pCue->data->instanceCount -= 1;
 		pCue->active = 0;

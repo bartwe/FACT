@@ -77,6 +77,10 @@ void FAudio_PlatformAddRef()
 {
 	/* SDL tracks ref counts for each subsystem */
 	SDL_InitSubSystem(SDL_INIT_AUDIO);
+	FAudio_INTERNAL_InitConverterFunctions(
+		SDL_HasSSE2(),
+		SDL_HasNEON()
+	);
 }
 
 void FAudio_PlatformRelease()
@@ -501,6 +505,11 @@ void FAudio_memcpy(void *dst, const void *src, size_t size)
 void FAudio_memmove(void *dst, void *src, size_t size)
 {
 	SDL_memmove(dst, src, size);
+}
+
+int FAudio_memcmp(const void *ptr1, const void *ptr2, size_t size)
+{
+	return SDL_memcmp(ptr1, ptr2, size);
 }
 
 size_t FAudio_strlen(const char *ptr)
