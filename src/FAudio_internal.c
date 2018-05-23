@@ -837,13 +837,13 @@ void FAudio_INTERNAL_SetDefaultMatrix(
 /* PCM Decoding */
 
 void (*FAudio_INTERNAL_Convert_S8_To_F32)(
-	const int8_t *restrict src,
-	float *restrict dst,
+	const int8_t * src,
+	float * dst,
 	uint32_t len
 );
 void (*FAudio_INTERNAL_Convert_S16_To_F32)(
-	const int16_t *restrict src,
-	float *restrict dst,
+	const int16_t * src,
+	float * dst,
 	uint32_t len
 );
 
@@ -1179,8 +1179,8 @@ void FAudio_INTERNAL_DecodeStereoMSADPCM(
 
 #if NEED_SCALAR_CONVERTER_FALLBACKS
 void FAudio_INTERNAL_Convert_S8_To_F32_Scalar(
-	const int8_t *restrict src,
-	float *restrict dst,
+	const int8_t * src,
+	float * dst,
 	uint32_t len
 ) {
 	uint32_t i;
@@ -1191,8 +1191,8 @@ void FAudio_INTERNAL_Convert_S8_To_F32_Scalar(
 }
 
 void FAudio_INTERNAL_Convert_S16_To_F32_Scalar(
-	const int16_t *restrict src,
-	float *restrict dst,
+	const int16_t * src,
+	float * dst,
 	uint32_t len
 ) {
 	uint32_t i;
