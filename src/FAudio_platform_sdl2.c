@@ -126,16 +126,7 @@ void FAudio_PlatformInit(FAudio *audio)
 		device->engineList = entry;
 		device->next = NULL;
 
-		/* Enforce a default device format.
-		 * FIXME: The way SDL picks device defaults is fucking stupid.
-		 * It's basically just a bunch of hardcoding and the values used
-		 * are just awful:
-		 *
-		 * https://hg.libsdl.org/SDL/file/c3446901fc1c/src/audio/SDL_audio.c#l1087
-		 *
-		 * We should step in and see if we can't pull this from the OS.
-		 * -flibit
-		 */
+		/* Build the device format */
 		want.freq = audio->master->master.inputSampleRate;
 		want.format = AUDIO_F32;
 		want.channels = audio->master->master.inputChannels;
@@ -150,10 +141,7 @@ void FAudio_PlatformInit(FAudio *audio)
 			0,
 			&want,
 			&have,
-			(
-				SDL_AUDIO_ALLOW_CHANNELS_CHANGE |
-				SDL_AUDIO_ALLOW_FREQUENCY_CHANGE
-			)
+			0
 		);
 		if (device->device == 0)
 		{
@@ -165,14 +153,20 @@ void FAudio_PlatformInit(FAudio *audio)
 		}
 
 		/* Write up the format */
-		device->format.Format.wFormatTag = 1;
+		device->format.Samples.wValidBitsPerSample = 32;
+		device->format.Format.wBitsPerSample = 32;
+		device->format.Format.wFormatTag = 3;
 		device->format.Format.nChannels = have.channels;
 		device->format.Format.nSamplesPerSec = have.freq;
-		device->format.Format.nAvgBytesPerSec = have.freq * 4;
-		device->format.Format.nBlockAlign = 0; /* ? */
-		device->format.Format.wBitsPerSample = 32;
-		device->format.Format.cbSize = 0; /* ? */
-		device->format.Samples.wValidBitsPerSample = 32;
+		device->format.Format.nBlockAlign = (
+			device->format.Format.nChannels *
+			(device->format.Format.wBitsPerSample / 8)
+		);
+		device->format.Format.nAvgBytesPerSec = (
+			device->format.Format.nSamplesPerSec *
+			device->format.Format.nBlockAlign
+		);
+		device->format.Format.cbSize = 0;
 		if (have.channels == 1)
 		{
 			device->format.dwChannelMask = SPEAKER_MONO;
@@ -212,15 +206,9 @@ void FAudio_PlatformInit(FAudio *audio)
 		audio->updateSize = device->bufferSize;
 		audio->mixFormat = &device->format;
 
-		/* Maybe also give it to the master voice */
-		if (audio->master->master.inputChannels == 0)
-		{
-			audio->master->master.inputChannels = have.channels;
-		}
-		if (audio->master->master.inputSampleRate == 0)
-		{
-			audio->master->master.inputSampleRate = have.freq;
-		}
+		/* Also give some info to the master voice */
+		audio->master->master.inputChannels = have.channels;
+		audio->master->master.inputSampleRate = have.freq;
 
 		/* Add to the device list */
 		if (devlist == NULL)
@@ -434,9 +422,19 @@ void FAudio_PlatformGetDeviceDetails(
 
 	/* FIXME: SDL needs a device format query function! */
 	details->OutputFormat.dwChannelMask = SPEAKER_STEREO;
+	details->OutputFormat.Samples.wValidBitsPerSample = 32;
+	details->OutputFormat.Format.wBitsPerSample = 32;
+	details->OutputFormat.Format.wFormatTag = 3;
 	details->OutputFormat.Format.nChannels = 2;
 	details->OutputFormat.Format.nSamplesPerSec = 48000;
-	details->OutputFormat.Samples.wValidBitsPerSample = 4;
+	details->OutputFormat.Format.nBlockAlign = (
+		details->OutputFormat.Format.nChannels *
+		(details->OutputFormat.Format.wBitsPerSample / 8)
+	);
+	details->OutputFormat.Format.nAvgBytesPerSec = (
+		details->OutputFormat.Format.nSamplesPerSec *
+		details->OutputFormat.Format.nBlockAlign
+	);
 }
 
 FAudioPlatformFixedRateSRC FAudio_PlatformInitFixedRateSRC(
