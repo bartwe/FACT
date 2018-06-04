@@ -149,11 +149,10 @@ void FACT_INTERNAL_GetNextWave(
 	FAudio_assert(wb != NULL);
 
 	/* Generate the Wave */
-	/* For infinite loops with no variation, let Wave do the work */
 	if (evtInst->loopCount == 255 && !(evt->wave.variationFlags & 0x0F00))
 	{
+		/* For infinite loops with no variation, let Wave do the work */
 		loopCount = 255;
-		evtInst->loopCount = 0;
 	}
 	FACTWaveBank_Prepare(
 		wb,
@@ -202,7 +201,7 @@ void FACT_INTERNAL_GetNextWave(
 			FACT_INTERNAL_rng() *
 			(evt->wave.maxPitch - evt->wave.minPitch)
 		) + evt->wave.minPitch;
-		if (evtInst->loopCount < evt->wave.loopCount)
+		if (trackInst->activeWave.wave != NULL)
 		{
 			/* Variation on Loop */
 			if (evt->wave.variationFlags & 0x0100)
@@ -237,7 +236,7 @@ void FACT_INTERNAL_GetNextWave(
 			FACT_INTERNAL_rng() *
 			(evt->wave.maxVolume - evt->wave.minVolume)
 		) + evt->wave.minVolume;
-		if (evtInst->loopCount < evt->wave.loopCount)
+		if (trackInst->activeWave.wave != NULL)
 		{
 			/* Variation on Loop */
 			if (evt->wave.variationFlags & 0x0200)
@@ -284,7 +283,7 @@ void FACT_INTERNAL_GetNextWave(
 			FACT_INTERNAL_rng() *
 			(evt->wave.maxFrequency - evt->wave.minFrequency)
 		);
-		if (evtInst->loopCount < evt->wave.loopCount)
+		if (trackInst->activeWave.wave != NULL)
 		{
 			/* Variation on Loop */
 			if (evt->wave.variationFlags & 0x0C00)
@@ -322,7 +321,15 @@ void FACT_INTERNAL_GetNextWave(
 	}
 
 	/* Try to change loop counter at the very end */
-	if (evtInst->loopCount > 0)
+	if (evtInst->loopCount == 255)
+	{
+		/* For infinite loops with no variation, Wave does the work */
+		if (!(evt->wave.variationFlags & 0x0F00))
+		{
+			evtInst->loopCount = 0;
+		}
+	}
+	else if (evtInst->loopCount > 0)
 	{
 		evtInst->loopCount -= 1;
 	}
