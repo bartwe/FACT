@@ -1986,15 +1986,22 @@ uint32_t FACT_INTERNAL_ParseAudioEngine(
 			dspParameterOffset;
 	uint16_t blob1Count, blob2Count;
 	uint8_t version, tool;
+	uint8_t se;
+	uint32_t magic;
 	size_t memsize;
 	uint16_t i, j;
 
 	uint8_t *ptr = (uint8_t*) pParams->pGlobalSettingsBuffer;
 	uint8_t *start = ptr;
-	
-	uint8_t se = 0; /* Swap Endian */
-	uint32_t magic = read_u32(&ptr, 0);
-	se = magic == 0x58475346;
+
+	/* FIXME: Should be recorded so we can return the correct error */
+	if (!pParams->pGlobalSettingsBuffer || pParams->globalSettingsBufferSize == 0)
+	{
+		return 0;
+	}
+
+	magic = read_u32(&ptr, 0);
+	se = magic == 0x58475346; /* Swap Endian */
 	if (magic != 0x46534758 && magic != 0x58475346) /* 'XGSF' */
 	{
 		return -1; /* TODO: NOT XACT FILE */
@@ -2484,7 +2491,7 @@ uint32_t FACT_INTERNAL_ParseSoundBank(
 		platform != 1 &&
 		platform != 3	)
 	{
-		return -1; /* TODO: WRONG PLATFORM */
+		return -4; /* TODO: WRONG PLATFORM */
 	}
 
 	sb = (FACTSoundBank*) pEngine->pMalloc(sizeof(FACTSoundBank));
