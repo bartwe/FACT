@@ -1,6 +1,6 @@
 /* FAudio - XAudio Reimplementation for FNA
  *
- * Copyright (c) 2011-2020 Ethan Lee, Luigi Auriemma, and the MonoGame Team
+ * Copyright (c) 2011-2021 Ethan Lee, Luigi Auriemma, and the MonoGame Team
  *
  * This software is provided 'as-is', without any express or implied warranty.
  * In no event will the authors be held liable for any damages arising from
@@ -27,6 +27,10 @@
 #include "FAudio_internal.h"
 
 #include <SDL.h>
+
+#if !SDL_VERSION_ATLEAST(2, 0, 9)
+#error "SDL version older than 2.0.9"
+#endif /* !SDL_VERSION_ATLEAST */
 
 /* Mixer Thread */
 
@@ -179,7 +183,12 @@ iosretry:
 	}
 
 	/* Write up the received format for the engine */
-	WriteWaveFormatExtensible(mixFormat, have.channels, have.freq);
+	WriteWaveFormatExtensible(
+		mixFormat,
+		have.channels,
+		have.freq,
+		&DATAFORMAT_SUBTYPE_IEEE_FLOAT
+	);
 	*updateSize = have.samples;
 
 	/* SDL_AudioDeviceID is a Uint32, anybody using a 16-bit PC still? */
@@ -260,7 +269,12 @@ uint32_t FAudio_PlatformGetDeviceDetails(
 	{
 		channels = 2;
 	}
-	WriteWaveFormatExtensible(&details->OutputFormat, channels, rate);
+	WriteWaveFormatExtensible(
+		&details->OutputFormat,
+		channels,
+		rate,
+		&DATAFORMAT_SUBTYPE_PCM
+	);
 	return 0;
 }
 

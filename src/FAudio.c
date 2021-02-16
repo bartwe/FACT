@@ -1,6 +1,6 @@
 /* FAudio - XAudio Reimplementation for FNA
  *
- * Copyright (c) 2011-2020 Ethan Lee, Luigi Auriemma, and the MonoGame Team
+ * Copyright (c) 2011-2021 Ethan Lee, Luigi Auriemma, and the MonoGame Team
  *
  * This software is provided 'as-is', without any express or implied warranty.
  * In no event will the authors be held liable for any damages arising from
@@ -210,7 +210,7 @@ uint32_t FAudio_Initialize(
 	FAudioProcessor XAudio2Processor
 ) {
 	LOG_API_ENTER(audio)
-	FAudio_assert(Flags == 0);
+	FAudio_assert(Flags == 0 || Flags == FAUDIO_DEBUG_ENGINE);
 	FAudio_assert(XAudio2Processor == FAUDIO_DEFAULT_PROCESSOR);
 
 	audio->initFlags = Flags;
@@ -697,7 +697,8 @@ uint32_t FAudio_CreateMasteringVoice(
 	WriteWaveFormatExtensible(
 		&audio->mixFormat,
 		audio->master->outputChannels,
-		audio->master->master.inputSampleRate
+		audio->master->master.inputSampleRate,
+		&DATAFORMAT_SUBTYPE_IEEE_FLOAT
 	);
 
 	/* Platform Device */

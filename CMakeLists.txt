@@ -29,8 +29,8 @@ endif()
 
 # Version
 SET(LIB_MAJOR_VERSION "0")
-SET(LIB_MINOR_VERSION "20")
-SET(LIB_REVISION "11")
+SET(LIB_MINOR_VERSION "21")
+SET(LIB_REVISION "02")
 SET(LIB_VERSION "${LIB_MAJOR_VERSION}.${LIB_MINOR_VERSION}.${LIB_REVISION}")
 
 # Build Type
@@ -142,9 +142,9 @@ if(GSTREAMER)
 
 	# Find GStreamer
 	find_package(PkgConfig)
-	pkg_check_modules(GST REQUIRED IMPORTED_TARGET gstreamer-1.0)
-	pkg_check_modules(GSTAUDIO REQUIRED IMPORTED_TARGET gstreamer-audio-1.0)
-	pkg_check_modules(GSTAPP REQUIRED IMPORTED_TARGET gstreamer-app-1.0)
+	pkg_check_modules(GST REQUIRED gstreamer-1.0>=1.9.2)
+	pkg_check_modules(GSTAUDIO REQUIRED gstreamer-audio-1.0>=1.9.2)
+	pkg_check_modules(GSTAPP REQUIRED gstreamer-app-1.0>=1.9.2)
 
 	# Include/Link GStreamer...
 	target_include_directories(FAudio PRIVATE
@@ -153,9 +153,9 @@ if(GSTREAMER)
 		${GSTAPP_INCLUDE_DIRS}
 	)
 	target_link_libraries(FAudio PRIVATE
-            PkgConfig::GST
-            PkgConfig::GSTAUDIO
-            PkgConfig::GSTAPP
+            ${GST_LDFLAGS}
+            ${GSTAUDIO_LDFLAGS}
+            ${GSTAPP_LDFLAGS}
         )
 endif(GSTREAMER)
 
@@ -439,6 +439,20 @@ install(
 	RUNTIME DESTINATION ${FAudio_INSTALL_BINDIR}
 	LIBRARY DESTINATION ${FAudio_INSTALL_LIBDIR}
 	ARCHIVE DESTINATION ${FAudio_INSTALL_LIBDIR}
+)
+
+# Generate a pkgconfig file
+include(cmake/JoinPaths.cmake)
+join_paths(FAUDIO_PKGCONF_LIBDIR "\${prefix}" "${CMAKE_INSTALL_LIBDIR}")
+join_paths(FAUDIO_PKGCONF_INCLUDEDIR "\${prefix}" "${CMAKE_INSTALL_INCLUDEDIR}")
+configure_file(
+	"${PROJECT_SOURCE_DIR}/cmake/${PROJECT_NAME}.pc.in"
+	${PROJECT_BINARY_DIR}/generated/${PROJECT_NAME}.pc
+	@ONLY
+)
+install(
+	FILES ${CMAKE_CURRENT_BINARY_DIR}/generated/${PROJECT_NAME}.pc
+	DESTINATION ${FAudio_INSTALL_LIBDIR}/pkgconfig
 )
 
 # Generate cmake-config file, install CMake files
